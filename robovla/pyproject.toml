@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "robovla"
+version = "2.0.0"
+description = "RoboVLA 工业轻量化具身示教智能系统"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.0",
+    "opencv-python>=4.8.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.2.0",
+    "pyyaml>=6.0",
+    "pycryptodome>=3.18.0",
+    "cryptography>=41.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["test_data"]
+python_files = ["test_*.py"]

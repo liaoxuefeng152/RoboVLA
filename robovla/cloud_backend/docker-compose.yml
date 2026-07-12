@@ -1,0 +1,115 @@
+version: '3.8'
+
+# ============================================================
+# RoboVLA V2.0 云端 SaaS 一键部署
+# 使用: docker-compose up -d
+# ============================================================
+
+services:
+  # --- MySQL 8.0 数据库 ---
+  mysql:
+    image: mysql:8.0
+    container_name: robovla-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: RoboVLA@2024Cloud
+      MYSQL_DATABASE: robovla_cloud
+      MYSQL_USER: robovla
+      MYSQL_PASSWORD: RoboVLA@2024App
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max_connections=200
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis 7 缓存 ---
+  redis:
+    image: redis:7-alpine
+    container_name: robovla-redis
+    restart: always
+    command: redis-server --requirepass RoboVLA@2024Redis --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "RoboVLA@2024Redis", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # --- SpringBoot 后端 ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: robovla-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: robovla_cloud
+      DB_USER: robovla
+      DB_PASS: RoboVLA@2024App
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASS: RoboVLA@2024Redis
+      JWT_SECRET: ${JWT_SECRET:-RoboVLA-JWT-Secret-Change-Me}
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_logs:/app/logs
+
+  # --- Vue3 前端 (Nginx) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: robovla-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+
+  # --- Nginx 反向代理 (可选, 用于SSL终结) ---
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: robovla-nginx
+  #   restart: always
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  #     - ./nginx/ssl:/etc/nginx/ssl
+  #   depends_on:
+  #     - backend
+  #     - frontend
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local

@@ -1,0 +1,42 @@
+# RoboVLA V2.0 Python依赖
+# 核心依赖
+numpy>=1.24.0
+opencv-python>=4.8.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+pytorch>=2.0.0  # Jetson用官方编译版
+tensorrt>=8.5.0
+onnxruntime>=1.14.0
+transformers>=4.30.0
+accelerate>=0.20.0
+bitsandbytes>=0.39.0
+
+# 机器人通信
+rclpy>=0.35.0  # ROS2 Humble Python
+
+# 图像处理
+pillow>=9.5.0
+matplotlib>=3.7.0
+imageio>=2.31.0
+
+# 数据处理
+pandas>=1.5.0
+pyyaml>=6.0
+json5>=0.9.0
+
+# 加密安全
+pycryptodome>=3.18.0
+cryptography>=41.0.0
+
+# 语音(离线ASR)
+vosk>=0.3.45
+sounddevice>=0.4.6
+
+# 工具
+tqdm>=4.65.0
+click>=8.1.0
+coloredlogs>=15.0.0
+
+# 测试
+pytest>=7.3.0
+pytest-cov>=4.1.0
